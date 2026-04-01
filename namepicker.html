@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Name Picker & Grouper</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            max-width: 500px;
+            width: 100%;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-top: 0;
+        }
+        p.instruction {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 12px;
+            border: 1px solid #dcdde1;
+            border-radius: 6px;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 25px;
+            font-family: inherit;
+            font-size: 15px;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+        .section {
+            background-color: #fafbfc;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #eee;
+            margin-bottom: 20px;
+        }
+        .section h3 {
+            margin-top: 0;
+            color: #34495e;
+            font-size: 18px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: background-color 0.2s ease;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .input-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .input-group label {
+            font-weight: 500;
+            color: #555;
+        }
+        input[type="number"] {
+            width: 80px;
+            padding: 8px;
+            border: 1px solid #dcdde1;
+            border-radius: 5px;
+            font-size: 16px;
+            text-align: center;
+        }
+        .result-box {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #e8f4f8;
+            border-radius: 6px;
+            display: none;
+            color: #2c3e50;
+        }
+        .group-card {
+            margin-top: 10px;
+            padding: 12px;
+            background-color: #fff;
+            border-left: 4px solid #3498db;
+            border-radius: 4px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .group-card h4 {
+            margin: 0 0 5px 0;
+            font-size: 15px;
+            color: #2980b9;
+        }
+        .group-card p {
+            margin: 0;
+            color: #444;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Name Picker & Grouper</h1>
+        <p class="instruction">Enter the names below (one name per line):</p>
+        <textarea id="nameList" placeholder="Alice&#10;Bob&#10;Charlie&#10;Diana"></textarea>
+
+        <div class="section">
+            <h3>Pick a Random Name</h3>
+            <button onclick="pickRandomName()">Draw a Name</button>
+            <div id="singleResult" class="result-box"></div>
+        </div>
+
+        <div class="section">
+            <h3>Generate Groups</h3>
+            <div class="input-group">
+                <label for="groupSize">Members per group:</label>
+                <input type="number" id="groupSize" min="1" value="2">
+            </div>
+            <button onclick="generateGroups()">Create Groups</button>
+            <div id="groupResult" class="result-box"></div>
+        </div>
+    </div>
+
+    <script>
+        // Helper function to get clean, non-empty names from the textarea
+        function getNames() {
+            const text = document.getElementById('nameList').value;
+            return text.split('\n')
+                       .map(name => name.trim())
+                       .filter(name => name !== '');
+        }
+
+        // Feature 1: Pick a single random name
+        function pickRandomName() {
+            const names = getNames();
+            const resultBox = document.getElementById('singleResult');
+            
+            if (names.length === 0) {
+                resultBox.innerHTML = '<em>Please enter at least one name above.</em>';
+                resultBox.style.display = 'block';
+                return;
+            }
+
+            const randomIndex = Math.floor(Math.random() * names.length);
+            const chosenName = names[randomIndex];
+            
+            resultBox.innerHTML = `<strong>Selected Name:</strong> 🎉 ${chosenName} 🎉`;
+            resultBox.style.display = 'block';
+        }
+
+        // Helper function: Fisher-Yates algorithm to randomly shuffle an array
+        function shuffleArray(array) {
+            let shuffled = array.slice();
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // Feature 2: Group names based on the requested size
+        function generateGroups() {
+            let names = getNames();
+            const groupSize = parseInt(document.getElementById('groupSize').value, 10);
+            const resultBox = document.getElementById('groupResult');
+
+            if (names.length === 0) {
+                resultBox.innerHTML = '<em>Please enter some names above.</em>';
+                resultBox.style.display = 'block';
+                return;
+            }
+
+            if (isNaN(groupSize) || groupSize < 1) {
+                resultBox.innerHTML = '<em>Please enter a valid number of members per group.</em>';
+                resultBox.style.display = 'block';
+                return;
+            }
+
+            // Shuffle names randomly before grouping
+            names = shuffleArray(names);
+            let groups = [];
+            
+            // Chunk the array into sizes of 'groupSize'
+            for (let i = 0; i < names.length; i += groupSize) {
+                groups.push(names.slice(i, i + groupSize));
+            }
+
+            // Build the HTML to display the groups
+            let html = '';
+            groups.forEach((group, index) => {
+                html += `
+                    <div class="group-card">
+                        <h4>Group ${index + 1} (${group.length} members)</h4>
+                        <p>${group.join(' • ')}</p>
+                    </div>
+                `;
+            });
+
+            resultBox.innerHTML = html;
+            resultBox.style.display = 'block';
+        }
+    </script>
+</body>
+</html>
